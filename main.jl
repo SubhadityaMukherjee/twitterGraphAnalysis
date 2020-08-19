@@ -1,90 +1,132 @@
-### A Pluto.jl notebook ###
-# v0.11.2
-
 using Markdown
 using InteractiveUtils
+using LightGraphs
+using GraphIO
+using GraphPlot
+using Colors
+using Cairo, Compose
+using Plots
+using DelimitedFiles
+using Query
+using DataFrames
 
-# ╔═╡ f2be1bf2-d600-11ea-16c5-1fbd2c1198da
+layout = (args...) -> spring_layout(args...; C = 20)
 
+# ------------------------
+md"# EGO NETWORK TEST"
 
-# ╔═╡ f2a66962-d600-11ea-329f-47505aca7cba
+# Ego Network (first 10000 connections)
+edge_network = loadgraph(
+    "/home/subhaditya/Desktop/Datasets/graph/twitter_ego_part.net",
+    EdgeListFormat(),
+)
 
+# Label the Network
+edgelabel = [1:LightGraphs.ne(edge_network)]
 
-# ╔═╡ f28e14d4-d600-11ea-1746-434d9c2c96b1
+nodelabel = [1:nv(edge_network)]
 
+nodesize =
+    [LightGraphs.outdegree(edge_network, v) for v in LightGraphs.vertices(edge_network)]
 
-# ╔═╡ f275f2d2-d600-11ea-2bb4-5719b270c762
+nodefillc = distinguishable_colors(nv(edge_network), colorant"blue")
 
+# Try to plot
+gp = gplot(
+    edge_network,
+    layout = layout,
+    nodesize = nodesize,
+	nodefillc = nodefillc,
+	nodelabeldist=1.8,
+	nodelabelangleoffset=π/4
+)
 
-# ╔═╡ f25e8ebc-d600-11ea-3275-9984b3da317c
-
-
-# ╔═╡ f242f90e-d600-11ea-3901-236f8b4ffcc9
-
-
-# ╔═╡ f22a95ee-d600-11ea-3b94-d769f3a950c4
-
-
-# ╔═╡ f20eeeca-d600-11ea-1257-599e2734515b
-
-
-# ╔═╡ 010595c6-d60f-11ea-24ea-3d5c5c38b09f
-md"Time taken - 17.197210 seconds (475.75 k allocations: 24.996 MiB)"
-
-# ╔═╡ bb840258-d61b-11ea-07f9-adc14a28f251
-layout=(args...)->spring_layout(args...; C=20)
-
-# ╔═╡ 1561d4a6-d60f-11ea-2abf-e32f78aedbf0
-md"## Large number of followers"
-
-# ╔═╡ d121596e-d600-11ea-0de4-f7bf58e224cf
-begin
-	using LightGraphs
-	using GraphIO
-	using GraphPlot
-	using Colors
-	using Cairo, Compose
-
-end
-
-# ╔═╡ f2f1db68-d600-11ea-0b7f-997869f98e35
-graph = loadgraph("/home/subhaditya/Desktop/Datasets/graph/celebrities_profiles.txt", EdgeListFormat())
-
-# ╔═╡ 4c15fd14-d60e-11ea-362e-a158e1833164
-nodefillc = distinguishable_colors(nv(graph), colorant"red")
-
-# ╔═╡ 00e68dc6-d61b-11ea-39ea-aff626d9e6f5
-edgelabel = [1:LightGraphs.ne(graph)]
-
-# ╔═╡ 3827978a-d61b-11ea-1768-9bfdad6c3949
-nodelabel = [1:nv(graph)]
-
-# ╔═╡ f30685da-d61a-11ea-14cb-61e7aef3cad3
-nodesize = [LightGraphs.outdegree(graph, v) for v in LightGraphs.vertices(graph)]
-
-# ╔═╡ b16d2208-d617-11ea-3809-5f2c1ef0d25b
-gp = gplot(graph, layout = layout, nodesize=nodesize,  nodefillc=nodefillc, edgestrokec = colorant"red" )
-
-# ╔═╡ f2d6b46e-d600-11ea-1661-b1029fa8141c
 draw(SVG("celebri.svg", 60cm, 60cm), gp)
 
-# ╔═╡ Cell order:
-# ╠═f2be1bf2-d600-11ea-16c5-1fbd2c1198da
-# ╠═f2a66962-d600-11ea-329f-47505aca7cba
-# ╠═f28e14d4-d600-11ea-1746-434d9c2c96b1
-# ╠═f275f2d2-d600-11ea-2bb4-5719b270c762
-# ╠═f25e8ebc-d600-11ea-3275-9984b3da317c
-# ╠═f242f90e-d600-11ea-3901-236f8b4ffcc9
-# ╠═f22a95ee-d600-11ea-3b94-d769f3a950c4
-# ╠═f20eeeca-d600-11ea-1257-599e2734515b
-# ╟─010595c6-d60f-11ea-24ea-3d5c5c38b09f
-# ╠═f2d6b46e-d600-11ea-1661-b1029fa8141c
-# ╠═b16d2208-d617-11ea-3809-5f2c1ef0d25b
-# ╠═4c15fd14-d60e-11ea-362e-a158e1833164
-# ╠═bb840258-d61b-11ea-07f9-adc14a28f251
-# ╠═00e68dc6-d61b-11ea-39ea-aff626d9e6f5
-# ╠═3827978a-d61b-11ea-1768-9bfdad6c3949
-# ╠═f30685da-d61a-11ea-14cb-61e7aef3cad3
-# ╠═f2f1db68-d600-11ea-0b7f-997869f98e35
-# ╠═1561d4a6-d60f-11ea-2abf-e32f78aedbf0
-# ╠═d121596e-d600-11ea-0de4-f7bf58e224cf
+# Features
+
+md"- ne = 10000, nv = 10001"
+ne(edge_network)
+
+nv(edge_network)
+
+has_self_loops(edge_network)
+
+## Adjacency
+adjm = adjacency_matrix(edge_network)
+
+verts = vertices(edge_network)
+
+adjm[1,:]
+
+## Clustering
+using Clustering
+
+kmeans(adjm, 5)
+
+
+# Ego Network (random 10000 connections)
+edge_network = loadgraph(
+    "/home/subhaditya/Desktop/Datasets/graph/twitter_ego_shuffled.net",
+    EdgeListFormat(),
+)
+
+# Label the Network
+edgelabel = [1:LightGraphs.ne(edge_network)]
+
+nodelabel = [1:nv(edge_network)]
+
+nodesize =
+    [LightGraphs.outdegree(edge_network, v) for v in LightGraphs.vertices(edge_network)]
+
+nodefillc = distinguishable_colors(nv(edge_network), colorant"blue")
+
+# Try to plot
+gp = gplot(
+    edge_network,
+    layout = layout,
+    nodesize = nodesize,
+	nodefillc = nodefillc,
+	nodelabeldist=1.8,
+	nodelabelangleoffset=π/4
+)
+
+draw(SVG("celebri.svg", 60cm, 60cm), gp)
+
+# Features
+
+md"- ne = 10000, nv = 10001"
+ne(edge_network)
+
+nv(edge_network)
+
+has_self_loops(edge_network)
+
+## Adjacency
+adjm = adjacency_matrix(edge_network)
+
+verts = vertices(edge_network)
+
+adjm[1,:]
+
+## Clustering
+using Clustering
+
+kmeans(adjm, 5)
+
+
+# ------------------------
+
+md"# Celebrities"
+
+## Get data
+data_cels = readdlm("/home/subhaditya/Desktop/Datasets/graph/celebrities_profiles.txt", '\t') 
+
+data_cels[1:4, :]	
+
+cols = ["no","x1","x2","x3","x4","xn", "country", "x5", "x6", "x7", "Designation","x8","x9","profile", "x10", "x11","x12","x13", "x14","name","x15","time","timezone","x16","x17", "x18"]
+
+data_table = DataFrame(data_cels)
+
+names!(data_table, Symbol.(cols))
+
